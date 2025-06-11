@@ -1,0 +1,16 @@
+# Jupyter notebooks
+*checkpoint.ipynb
+*checkpoint.py
+*.ipynb
+
+# Python
+*.pyc
+
+# Excel files
+*.xlsx
+
+# Data
+*.csv
+
+# Mac files
+.DS_Store
