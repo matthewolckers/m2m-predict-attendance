@@ -41,48 +41,71 @@ test.describe().transpose()
 comp.describe().transpose()
 
 
-train.dtypes
+def plot_miss_first_by_month_across_sources(train, test, comp, save_path=None):
+    # Ensure started_time is datetime
+    for df in [train, test, comp]:
+        df['started_time'] = pd.to_datetime(df['started_time'])
 
-train['started_time'] = pd.to_datetime(train['started_time'])
-train["month"] = train['started_time'].dt.to_period('M')
+    # Add source column
+    train['source'] = 'Train'
+    test['source'] = 'Test'
+    comp['source'] = 'Comparison'
 
-train.groupby('month').agg({'miss_first': ['mean', 'count']})
+    # Concatenate dataframes
+    all_df = pd.concat([train, test, comp], ignore_index=True)
 
+    # Create month column
+    all_df['month'] = all_df['started_time'].dt.to_period('M').dt.to_timestamp()
 
-def plot_monthly_miss_first(df, save_path=None):
-    # Convert started_time to datetime if it's not already
-    df['started_time'] = pd.to_datetime(df['started_time'])
+    # Group by source and month, calculate mean miss_first
+    monthly_stats = (
+        all_df.groupby(['source', 'month'])['miss_first']
+        .mean()
+        .reset_index()
+    )
 
-    # Group by month and calculate mean of miss_first
-    monthly_miss_first = df.groupby(df['started_time'].dt.to_period('M'))['miss_first'].mean().reset_index()
-    monthly_miss_first['started_time'] = monthly_miss_first['started_time'].dt.to_timestamp()
+    # Set up seaborn style for publication
+    sns.set_theme(style="whitegrid", context="talk", font_scale=1.3)
+    plt.figure(figsize=(14, 7))
 
-    print(monthly_miss_first)
+    # Lineplot with source as hue
+    ax = sns.lineplot(
+        data=monthly_stats,
+        x='month',
+        y='miss_first',
+        hue='source',
+        marker='o',
+        linewidth=2.5,
+        palette='Set2'
+    )
 
-    # Set up the plot style
-    sns.set_style('whitegrid')
-    sns.set_context("paper", font_scale=1.2)
-    sns.set_palette("deep")
+    # Set y-axis limits between 0 and 1
+    ax.set_ylim(0, 1)
 
-    # Create the figure and axis objects
-    fig, ax = plt.subplots(figsize=(12, 6))
+    # Title and labels
+    # ax.set_title('Share of clients that missed their first follow-up appointment', fontsize=20, fontweight='bold', pad=20)
+    ax.set_xlabel('Month', fontsize=20, labelpad=10)
+    ax.set_ylabel('Share of clients', fontsize=20, labelpad=10)
 
-    # Plot the data
-    sns.lineplot(data=monthly_miss_first, x='started_time', y='miss_first', ax=ax, linewidth=2, color='#1f77b4')
+    # Format x-axis
+    ax.xaxis.set_major_formatter(DateFormatter("%b %Y"))
+    plt.xticks(rotation=45, ha='right')
 
-    # Customize the plot
-    ax.set_title('Monthly Average of Miss First', fontsize=18, fontweight='bold', pad=20)
-    ax.set_xlabel('Date', fontsize=14, labelpad=10)
-    ax.set_ylabel('Average Miss First', fontsize=14, labelpad=10)
+    # Set font size for axis tick labels
+    ax.tick_params(axis='x', labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
 
-    # # Format x-axis ticks
-    # ax.xaxis.set_major_formatter(DateFormatter("%Y-%m"))
-    # plt.xticks(rotation=45, ha='right')
+    # Legend
+    ax.legend(title='Data Source', fontsize=18, title_fontsize=15)
 
+    # Tight layout for publication
+    plt.tight_layout()
 
-    # Save the figure if a save path is provided
+    # Save if requested
     if save_path:
-        plt.savefig(save_path)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
-    # Show the plot
     plt.show()
+
+
+plot_miss_first_by_month_across_sources(train, test, comp, save_path='../figures/miss_first_by_month_across_sources.png')
