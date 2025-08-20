@@ -5,6 +5,7 @@
 
 # Python
 *.pyc
+__pycache__/
 
 # Excel files
 *.xlsx
@@ -14,3 +15,7 @@
 
 # Mac files
 .DS_Store
+
+# Figures
+*.png
+*.jpg
