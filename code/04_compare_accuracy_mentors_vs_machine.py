@@ -307,6 +307,9 @@ pick_comp2 = pick_comp[
 
 pick_comp2.groupby('picked').miss_first.agg(['count','mean'])
 
+# Note that 7 of the 13 of the mentor mothers do not have any clients that missed 
+pick_comp2.groupby('mentor_username').miss_first.agg(['count','mean'])
+
 # +
 # 1) Clean and coerce to binary 0/1
 dfc = pick_comp2[['miss_first','picked','mentor_username']].copy()
